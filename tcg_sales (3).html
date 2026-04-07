@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TCG Sales Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f5f3ee;
+    --surface: #ffffff;
+    --surface2: #eeece7;
+    --border: rgba(0,0,0,0.1);
+    --border-strong: rgba(0,0,0,0.2);
+    --text: #1a1a18;
+    --text-muted: #6b6960;
+    --text-faint: #a8a49c;
+    --btn-hover: #eeece7;
+    --danger: #c0392b;
+    --danger-bg: #fdf0ee;
+    --full-bg: #eaf3de;
+    --full-border: #639922;
+    --full-text: #3b6d11;
+    --b2g1-bg: #fef3dc;
+    --b2g1-border: #c98a1a;
+    --b2g1-text: #7a4f00;
+    --bundle-bg: #e6f1fb;
+    --bundle-border: #378add;
+    --bundle-text: #0c447c;
+    --trade-bg: #fbeaf0;
+    --trade-border: #d4537e;
+    --trade-text: #72243e;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #141412;
+      --surface: #1e1d1a;
+      --surface2: #28271f;
+      --border: rgba(255,255,255,0.08);
+      --border-strong: rgba(255,255,255,0.15);
+      --text: #f0ede6;
+      --text-muted: #9e9a91;
+      --text-faint: #5c5a54;
+      --btn-hover: #28271f;
+      --danger: #e05c4a;
+      --danger-bg: #2a1410;
+      --full-bg: #173404;
+      --full-border: #639922;
+      --full-text: #c0dd97;
+      --b2g1-bg: #2e2206;
+      --b2g1-border: #c98a1a;
+      --b2g1-text: #f5c96a;
+      --bundle-bg: #042c53;
+      --bundle-border: #378add;
+      --bundle-text: #b5d4f4;
+      --trade-bg: #4b1528;
+      --trade-border: #d4537e;
+      --trade-text: #f4c0d1;
+    }
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 2rem 1rem 4rem;
+  }
+
+  .wrap {
+    max-width: 520px;
+    margin: 0 auto;
+  }
+
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+
+  .wordmark {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  button {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    padding: 10px 18px;
+    border-radius: 8px;
+    border: 1px solid var(--border-strong);
+    background: var(--surface);
+    color: var(--text);
+    cursor: pointer;
+    transition: background 0.15s;
+    white-space: nowrap;
+    min-height: 44px;
+  }
+  button:hover { background: var(--btn-hover); }
+  button:active { transform: scale(0.97); }
+
+  .btn-ghost {
+    border-color: transparent;
+    background: transparent;
+    color: var(--text-muted);
+  }
+  .btn-ghost:hover { background: var(--btn-hover); color: var(--text); }
+
+  /* Revenue summary */
+  .summary {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin-bottom: 1.5rem;
+  }
+
+  .stat {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 0.875rem 1rem;
+  }
+
+  .stat-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+    margin-bottom: 4px;
+  }
+
+  .stat-value {
+    font-family: 'DM Mono', monospace;
+    font-size: 22px;
+    font-weight: 500;
+    color: var(--text);
+  }
+
+  .stat-sub {
+    font-size: 11px;
+    color: var(--text-faint);
+    margin-top: 2px;
+  }
+
+  /* Entry form */
+  .entry-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 1.25rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .entry-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+    margin-bottom: 0.75rem;
+  }
+
+  /* Deal type selector */
+  .deal-types {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+    margin-bottom: 1rem;
+  }
+
+  .deal-btn {
+    padding: 14px 4px;
+    font-size: 13px;
+    font-weight: 500;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    color: var(--text-muted);
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.15s;
+    min-height: 48px;
+  }
+  .deal-btn:hover { border-color: var(--border-strong); color: var(--text); }
+  .deal-btn.active-full   { background: var(--full-bg);   border-color: var(--full-border);   color: var(--full-text); }
+  .deal-btn.active-b2g1   { background: var(--b2g1-bg);   border-color: var(--b2g1-border);   color: var(--b2g1-text); }
+  .deal-btn.active-bundle { background: var(--bundle-bg); border-color: var(--bundle-border); color: var(--bundle-text); }
+  .deal-btn.active-trade  { background: var(--trade-bg);  border-color: var(--trade-border);  color: var(--trade-text); }
+
+  /* Amount inputs */
+  .amount-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 0.875rem;
+  }
+
+  .dollar-wrap {
+    position: relative;
+    flex: 1;
+  }
+
+  .dollar-sign {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-family: 'DM Mono', monospace;
+    font-size: 14px;
+    color: var(--text-muted);
+    pointer-events: none;
+  }
+
+  .amount-input {
+    font-family: 'DM Mono', monospace;
+    font-size: 18px;
+    font-weight: 500;
+    width: 100%;
+    padding: 14px 10px 14px 28px;
+    border-radius: 10px;
+    border: 1px solid var(--border-strong);
+    background: var(--surface2);
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.15s;
+    min-height: 52px;
+  }
+  .amount-input:focus { border-color: var(--bundle-border); }
+  .amount-input::placeholder { color: var(--text-faint); }
+
+  /* B2G1 / Trade secondary fields */
+  .b2g1-row, .trade-row {
+    display: none;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 0.875rem;
+  }
+  .b2g1-row.visible, .trade-row.visible { display: flex; }
+
+  .b2g1-label {
+    font-size: 12px;
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
+
+  /* Note input */
+  .note-input {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    width: 100%;
+    padding: 14px 12px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    color: var(--text);
+    outline: none;
+    margin-bottom: 0.875rem;
+    transition: border-color 0.15s;
+    min-height: 52px;
+  }
+  .note-input:focus { border-color: var(--bundle-border); }
+  .note-input::placeholder { color: var(--text-faint); }
+
+  .log-btn {
+    width: 100%;
+    padding: 16px;
+    font-size: 16px;
+    font-weight: 500;
+    border-radius: 12px;
+    border: none;
+    background: var(--text);
+    color: var(--bg);
+    cursor: pointer;
+    transition: opacity 0.15s;
+    min-height: 56px;
+  }
+  .log-btn:hover { opacity: 0.85; background: var(--text); }
+  .log-btn:active { transform: scale(0.98); }
+
+  /* Sales log */
+  .log-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.75rem;
+  }
+
+  .log-title {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+  }
+
+  .clear-log-btn {
+    font-size: 11px;
+    padding: 2px 8px;
+    border-color: transparent;
+    background: none;
+    color: var(--text-faint);
+    border-radius: 6px;
+  }
+  .clear-log-btn:hover { color: var(--danger); background: var(--danger-bg); }
+
+  .log-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .log-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 0.75rem 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    animation: fadeIn 0.15s ease;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .log-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+  }
+
+  .deal-badge {
+    font-size: 10px;
+    font-weight: 500;
+    padding: 2px 7px;
+    border-radius: 5px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .badge-full   { background: var(--full-bg);   color: var(--full-text);   border: 1px solid var(--full-border); }
+  .badge-b2g1   { background: var(--b2g1-bg);   color: var(--b2g1-text);   border: 1px solid var(--b2g1-border); }
+  .badge-bundle { background: var(--bundle-bg); color: var(--bundle-text); border: 1px solid var(--bundle-border); }
+  .badge-trade  { background: var(--trade-bg);  color: var(--trade-text);  border: 1px solid var(--trade-border); }
+
+  .log-note {
+    font-size: 13px;
+    color: var(--text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .log-time {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--text-faint);
+    flex-shrink: 0;
+  }
+
+  .log-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+  }
+
+  .log-amount {
+    font-family: 'DM Mono', monospace;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text);
+  }
+
+  .log-free {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--text-faint);
+  }
+
+  .delete-btn {
+    font-size: 15px;
+    padding: 6px 10px;
+    border-color: transparent;
+    background: none;
+    color: var(--text-faint);
+    border-radius: 8px;
+    line-height: 1;
+    min-width: 36px;
+    min-height: 36px;
+  }
+  .delete-btn:hover { color: var(--danger); background: var(--danger-bg); }
+
+  .empty-log {
+    text-align: center;
+    padding: 2rem 1rem;
+    font-size: 13px;
+    color: var(--text-faint);
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <span class="wordmark">TCG Sales</span>
+    <div class="header-right">
+      <button class="btn-ghost" onclick="saveJSON()">Save</button>
+      <button class="btn-ghost" onclick="document.getElementById('load-input').click()">Load</button>
+      <input type="file" id="load-input" accept=".json" style="display:none" onchange="loadJSON(event)">
+    </div>
+  </header>
+
+  <!-- Summary -->
+  <div class="summary">
+    <div class="stat">
+      <div class="stat-label">Total revenue</div>
+      <div class="stat-value" id="stat-revenue">$0</div>
+      <div class="stat-sub" id="stat-txcount">0 transactions</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Free cards given</div>
+      <div class="stat-value" id="stat-free">$0</div>
+      <div class="stat-sub" id="stat-freecount">0 B2G1 deals</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Full price</div>
+      <div class="stat-value" id="stat-full">$0</div>
+      <div class="stat-sub" id="stat-fullcount">0 sales</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Trades</div>
+      <div class="stat-value" id="stat-trades">0</div>
+      <div class="stat-sub" id="stat-tradeamt">$0 value</div>
+    </div>
+  </div>
+
+  <!-- Entry -->
+  <div class="entry-card">
+    <div class="entry-label">Log a sale</div>
+
+    <div class="deal-types">
+      <div class="deal-btn active-full" data-type="full"  onclick="selectDeal('full')">Full</div>
+      <div class="deal-btn"             data-type="b2g1"  onclick="selectDeal('b2g1')">B2G1</div>
+      <div class="deal-btn"             data-type="trade" onclick="selectDeal('trade')">Trade</div>
+    </div>
+
+    <div class="amount-row">
+      <div class="dollar-wrap">
+        <span class="dollar-sign">$</span>
+        <input class="amount-input" id="amount-input" type="number" min="0" step="0.01" placeholder="0.00" inputmode="decimal">
+      </div>
+    </div>
+
+    <!-- B2G1 free card value -->
+    <div class="b2g1-row" id="b2g1-row">
+      <span class="b2g1-label">Free card value:</span>
+      <div class="dollar-wrap" style="flex:1">
+        <span class="dollar-sign">$</span>
+        <input class="amount-input" id="free-input" type="number" min="0" step="0.01" placeholder="0.00" inputmode="decimal">
+      </div>
+    </div>
+
+    <!-- Trade value given -->
+    <div class="trade-row" id="trade-row">
+      <span class="b2g1-label">Trade value given:</span>
+      <div class="dollar-wrap" style="flex:1">
+        <span class="dollar-sign">$</span>
+        <input class="amount-input" id="trade-given-input" type="number" min="0" step="0.01" placeholder="0.00" inputmode="decimal">
+      </div>
+    </div>
+
+    <input class="note-input" id="note-input" type="text" placeholder="Note (optional — card, set, anything)" maxlength="60">
+
+    <button class="log-btn" onclick="logSale()">Log sale</button>
+  </div>
+
+  <!-- Log -->
+  <div class="log-header">
+    <span class="log-title">Sales log</span>
+    <button class="clear-log-btn" onclick="clearAll()">Clear all</button>
+  </div>
+  <div class="log-list" id="log-list">
+    <div class="empty-log" id="empty-msg">No sales logged yet.</div>
+  </div>
+
+</div>
+
+<script>
+  let sales = [];
+  let currentDeal = 'full';
+  const LS_KEY = 'tcg_sales_data';
+
+  function autoSave() {
+    try { localStorage.setItem(LS_KEY, JSON.stringify(sales)); } catch(e) {}
+  }
+
+  function autoLoad() {
+    try {
+      const raw = localStorage.getItem(LS_KEY);
+      if (raw) { sales = JSON.parse(raw); }
+    } catch(e) {}
+  }
+
+  const dealLabels = { full: 'Full', b2g1: 'B2G1', bundle: '2/$X', trade: 'Trade' };
+
+  function selectDeal(type) {
+    currentDeal = type;
+    document.querySelectorAll('.deal-btn').forEach(b => {
+      b.className = 'deal-btn';
+      if (b.dataset.type === type) b.classList.add('active-' + type);
+    });
+    document.getElementById('b2g1-row').classList.toggle('visible', type === 'b2g1');
+    document.getElementById('trade-row').classList.toggle('visible', type === 'trade');
+  }
+
+  function logSale() {
+    const amtRaw       = parseFloat(document.getElementById('amount-input').value);
+    const freeRaw      = parseFloat(document.getElementById('free-input').value) || 0;
+    const tradeGivenRaw= parseFloat(document.getElementById('trade-given-input').value) || 0;
+    const note         = document.getElementById('note-input').value.trim();
+
+    if (isNaN(amtRaw) || amtRaw < 0) {
+      document.getElementById('amount-input').focus();
+      return;
+    }
+
+    const now = new Date();
+    const time = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+    sales.unshift({
+      id: Date.now(),
+      type: currentDeal,
+      amount: amtRaw,
+      free: currentDeal === 'b2g1' ? freeRaw : 0,
+      tradeGiven: currentDeal === 'trade' ? tradeGivenRaw : 0,
+      note,
+      time
+    });
+
+    document.getElementById('amount-input').value = '';
+    document.getElementById('free-input').value = '';
+    document.getElementById('trade-given-input').value = '';
+    document.getElementById('note-input').value = '';
+    document.getElementById('amount-input').focus();
+
+    renderLog();
+    updateStats();
+    autoSave();
+  }
+
+  function deleteSale(id) {
+    sales = sales.filter(s => s.id !== id);
+    renderLog();
+    updateStats();
+    autoSave();
+  }
+
+  function clearAll() {
+    if (sales.length === 0) return;
+    if (!confirm('Clear all sales? This cannot be undone.')) return;
+    sales = [];
+    renderLog();
+    updateStats();
+    autoSave();
+  }
+
+  function updateStats() {
+    const trades       = sales.filter(s => s.type === 'trade');
+    const tradeNet     = trades.reduce((sum, s) => sum + (s.amount - (s.tradeGiven || 0)), 0);
+    const nonTrade     = sales.filter(s => s.type !== 'trade').reduce((sum, s) => sum + s.amount, 0);
+    const revenue      = nonTrade + tradeNet;
+    const freeTotal    = sales.filter(s => s.type === 'b2g1').reduce((sum, s) => sum + s.free, 0);
+    const b2g1Count    = sales.filter(s => s.type === 'b2g1').length;
+    const fullSales    = sales.filter(s => s.type === 'full');
+    const fullTotal    = fullSales.reduce((sum, s) => sum + s.amount, 0);
+    const txCount      = sales.length;
+
+    document.getElementById('stat-revenue').textContent  = '$' + revenue.toFixed(2);
+    document.getElementById('stat-txcount').textContent  = txCount + (txCount === 1 ? ' transaction' : ' transactions');
+    document.getElementById('stat-free').textContent     = '$' + freeTotal.toFixed(2);
+    document.getElementById('stat-freecount').textContent= b2g1Count + (b2g1Count === 1 ? ' B2G1 deal' : ' B2G1 deals');
+    document.getElementById('stat-full').textContent     = '$' + fullTotal.toFixed(2);
+    document.getElementById('stat-fullcount').textContent= fullSales.length + (fullSales.length === 1 ? ' sale' : ' sales');
+    document.getElementById('stat-trades').textContent   = trades.length;
+    document.getElementById('stat-tradeamt').textContent = '$' + tradeNet.toFixed(2) + ' net';
+  }
+
+  function renderLog() {
+    const list = document.getElementById('log-list');
+    const empty = document.getElementById('empty-msg');
+
+    list.innerHTML = '';
+
+    if (sales.length === 0) {
+      list.appendChild(empty);
+      return;
+    }
+
+    sales.forEach(sale => {
+      const item = document.createElement('div');
+      item.className = 'log-item';
+
+      const left = document.createElement('div');
+      left.className = 'log-left';
+
+      const badge = document.createElement('span');
+      badge.className = 'deal-badge badge-' + sale.type;
+      badge.textContent = dealLabels[sale.type];
+
+      const noteEl = document.createElement('span');
+      noteEl.className = 'log-note';
+      noteEl.textContent = sale.note || '—';
+
+      left.appendChild(badge);
+      left.appendChild(noteEl);
+
+      const right = document.createElement('div');
+      right.className = 'log-right';
+
+      const amtEl = document.createElement('span');
+      amtEl.className = 'log-amount';
+      amtEl.textContent = '$' + sale.amount.toFixed(2);
+
+      const timeEl = document.createElement('span');
+      timeEl.className = 'log-time';
+      timeEl.textContent = sale.time;
+
+      const delBtn = document.createElement('button');
+      delBtn.className = 'delete-btn';
+      delBtn.textContent = '✕';
+      delBtn.title = 'Remove';
+      delBtn.onclick = () => deleteSale(sale.id);
+
+      right.appendChild(amtEl);
+      if (sale.type === 'b2g1' && sale.free > 0) {
+        const freeEl = document.createElement('span');
+        freeEl.className = 'log-free';
+        freeEl.textContent = '−$' + sale.free.toFixed(2) + ' free';
+        right.appendChild(freeEl);
+      }
+      if (sale.type === 'trade' && sale.tradeGiven > 0) {
+        const tradeEl = document.createElement('span');
+        tradeEl.className = 'log-free';
+        tradeEl.textContent = '−$' + sale.tradeGiven.toFixed(2) + ' given';
+        right.appendChild(tradeEl);
+      }
+      right.appendChild(timeEl);
+      right.appendChild(delBtn);
+
+      item.appendChild(left);
+      item.appendChild(right);
+      list.appendChild(item);
+    });
+  }
+
+  function saveJSON() {
+    const blob = new Blob([JSON.stringify({ sales }, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'tcg_sales.json';
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
+
+  function loadJSON(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+      try {
+        const data = JSON.parse(e.target.result);
+        sales = data.sales || [];
+        renderLog();
+        updateStats();
+      } catch {
+        alert("Could not read that file. Make sure it's a valid TCG Sales save.");
+      }
+    };
+    reader.readAsText(file);
+    event.target.value = '';
+  }
+
+  // Log on Enter key
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && document.activeElement.classList.contains('amount-input')) logSale();
+    if (e.key === 'Enter' && document.activeElement.classList.contains('note-input')) logSale();
+  });
+
+  autoLoad();
+  renderLog();
+  updateStats();
+</script>
+</body>
+</html>
